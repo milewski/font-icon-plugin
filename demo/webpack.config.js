@@ -52,7 +52,10 @@ module.exports = () => {
             new ExtractTextPlugin({
                 filename: '[name].css?[contenthash]'
             }),
-            new FontIconPlugin()
+            new FontIconPlugin({
+                familyName: 'myFont',
+                outputDir: 'fonts'
+            })
         ]
     }
 }

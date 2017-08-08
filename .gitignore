@@ -3,3 +3,4 @@ npm-debug.log
 yarn.lock
 *.map
 test/temp
+.idea
