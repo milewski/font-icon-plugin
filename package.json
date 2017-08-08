@@ -1,8 +1,8 @@
 {
-    "name": "favicons-webpack-plugin",
-    "version": "0.0.7",
-    "description": "Let webpack generate all your favicons and icons for you",
-    "main": "index.js",
+    "name": "icon-font-plugin",
+    "version": "0.0.0",
+    "description": "Let webpack generare fonticons",
+    "main": "source/plugin.js",
     "files": [
         "index.js",
         "lib/"
@@ -12,12 +12,12 @@
         "try": "webpack --config demo/webpack.config.js --display none",
         "prepublish": "npm run test",
         "build": "tsc",
-        "test": "mocha test/test.js --no-timeouts",
+        "test": "npm run build && mocha test/test.js --no-timeouts",
         "pretest": "npm run build"
     },
     "repository": {
         "type": "git",
-        "url": "https://github.com/jantimon/favicons-webpack-plugin.git"
+        "url": "https://github.com/milewski/icon-font-plugin.git"
     },
     "keywords": [
         "webpack",
@@ -26,15 +26,15 @@
         "favicon",
         "icon"
     ],
-    "author": "Jan Nicklas <j.nicklas@me.com> (https://github.com/jantimon)",
+    "author": "Rafael Milewski <rafael.milewski@gmail.com> (https://github.com/milewski)",
     "license": "MIT",
     "bugs": {
-        "url": "https://github.com/jantimon/favicons-webpack-plugin/issues"
+        "url": "https://github.com/milewski/icon-font-plugin/issues"
     },
     "semistandard": {
         "parser": "babel-eslint"
     },
-    "homepage": "https://github.com/jantimon/favicons-webpack-plugin",
+    "homepage": "https://github.com/milewski/icon-font-plugin",
     "devDependencies": {
         "@types/webpack": "^3.0.5",
         "clean-webpack-plugin": "^0.1.16",
