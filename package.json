@@ -1,0 +1,56 @@
+{
+    "name": "favicons-webpack-plugin",
+    "version": "0.0.7",
+    "description": "Let webpack generate all your favicons and icons for you",
+    "main": "index.js",
+    "files": [
+        "index.js",
+        "lib/"
+    ],
+    "scripts": {
+        "try:node": "node --inspect-brk ./node_modules/webpack/bin/webpack.js --config demo/webpack.config.js --display none",
+        "try": "webpack --config demo/webpack.config.js --display none",
+        "prepublish": "npm run test",
+        "build": "tsc",
+        "test": "mocha test/test.js --no-timeouts",
+        "pretest": "npm run build"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/jantimon/favicons-webpack-plugin.git"
+    },
+    "keywords": [
+        "webpack",
+        "plugin",
+        "html-webpack-plugin",
+        "favicon",
+        "icon"
+    ],
+    "author": "Jan Nicklas <j.nicklas@me.com> (https://github.com/jantimon)",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/jantimon/favicons-webpack-plugin/issues"
+    },
+    "semistandard": {
+        "parser": "babel-eslint"
+    },
+    "homepage": "https://github.com/jantimon/favicons-webpack-plugin",
+    "devDependencies": {
+        "@types/webpack": "^3.0.5",
+        "clean-webpack-plugin": "^0.1.16",
+        "css-loader": "^0.28.4",
+        "extract-text-webpack-plugin": "^3.0.0",
+        "file-loader": "^0.11.2",
+        "node-sass": "^4.5.3",
+        "postcss": "^6.0.8",
+        "postcss-loader": "^2.0.6",
+        "resolve-url-loader": "^2.1.0",
+        "sass-loader": "^6.0.6",
+        "style-loader": "^0.18.2",
+        "typescript": "^2.4.2",
+        "webfonts-generator": "^0.4.0",
+        "webpack": "^3.4.1",
+        "xml-js": "^1.3.2"
+    },
+    "dependencies": {}
+}

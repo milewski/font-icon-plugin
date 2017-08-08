@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="80px" height="80px" viewBox="0 0 80 80" version="1.1" xmlns="http://www.w3.org/2000/svg"
+>
+    <!-- Generator: Sketch 45.2 (43514) - http://www.bohemiancoding.com/sketch -->
+    <title>PLAY BUTTON</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="DESKTOP" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="1.1-HOMEPAGE-G" transform="translate(-681.000000, -4320.000000)" fill="#FFFFFF">
+            <g id="ANDRE'S-VIDEOS" transform="translate(-60.000000, 3999.000000)">
+                <g id="VIDEO-PALYER" transform="translate(59.000000, 287.000000)">
+                    <g id="PLAY--BAR-2" transform="translate(659.000000, 0.000000)">
+                        <g id="PLAY-BUTTON" transform="translate(23.000000, 34.000000)">
+                            <path d="M40,80 C17.90861,80 0,62.09139 0,40 C0,17.90861 17.90861,0 40,0 C62.09139,0 80,17.90861 80,40 C80,62.09139 62.09139,80 40,80 Z M48.3357919,39.8666667 L35.1308748,29.9629788 L35.1308748,49.7703545 L48.3357919,39.8666667 Z"
+                                  id="Combined-Shape"></path>
+                        </g>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>
