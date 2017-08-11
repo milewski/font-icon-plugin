@@ -107,6 +107,7 @@ class PostcssPlugin {
                 extension.append(postcss.decl({ prop: 'font-family', value: `'${options.familyName}'` }))
                 extension.append(postcss.decl({ prop: 'speak', value: "none" }))
                 extension.append(postcss.decl({ prop: 'font-style', value: "normal" }))
+                extension.append(postcss.decl({ prop: 'vertical-align', value: "middle" }))
                 extension.append(postcss.decl({ prop: 'font-weight', value: "normal" }))
                 extension.append(postcss.decl({ prop: 'font-variant', value: "normal" }))
                 extension.append(postcss.decl({ prop: 'text-transform', value: "none" }))

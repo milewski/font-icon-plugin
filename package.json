@@ -1,6 +1,6 @@
 {
     "name": "icon-font-plugin",
-    "version": "0.0.0.alpha01",
+    "version": "0.0.1",
     "description": "Let webpack generare fonticons",
     "main": "source/plugin.js",
     "files": [
