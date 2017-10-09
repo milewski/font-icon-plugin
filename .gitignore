@@ -6,3 +6,4 @@ test/temp
 .idea
 demo
 *.js
+!demo

@@ -3,8 +3,9 @@
         "module": "commonjs",
         "target": "es6",
         "sourceMap": true,
-        "declaration": true,
+        "declaration": false,
         "declarationDir": "declarations",
+        "newLine": "LF",
         "types": [
             "webpack",
             "webpack-env",

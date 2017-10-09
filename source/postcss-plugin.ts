@@ -1,22 +1,33 @@
-import * as postcss from 'postcss';
-import * as webfontsGenerator from 'webfonts-generator';
-import * as path from "path";
-import { Configuration } from "./Interfaces/Configuration";
+import * as postcss from 'postcss'
+import { Root } from 'postcss'
+import * as webfontsGenerator from 'webfonts-generator'
+import * as path from 'path'
+import { loader } from 'webpack'
+import { Cache } from './cache'
+import { PLUGIN_NAME } from './plugin';
 
-const list = {}
+export class PostcssPlugin {
 
-class PostcssPlugin {
-
-    private name = 'icon-font-webpack'
-    private root
-
-    run() {
-        return postcss.plugin(this.name, (configuration: Configuration) => {
-            return root => this.process(this.root = root, configuration)
-        })
+    private root: Root
+    private cache: Cache
+    private options: any = { publicPath: '/', fallbackType: 'eot' }
+    private formats = {
+        ttf: 'truetype',
+        woff: 'woff',
+        woff2: 'woff2',
+        svg: 'svg',
+        eot: 'embedded-opentype'
     }
 
-    process(root: postcss.Root, { loader, options }: Configuration): Promise<void> {
+    public initialize = postcss.plugin(PLUGIN_NAME, () => root => this.process(this.root = root))
+
+    constructor(options: any, private loader: loader.LoaderContext) {
+        this.options = { ...this.options, ...options }
+        this.cache = new Cache(this.options.context)
+    }
+
+    process(root: Root): Promise<void> {
+
         return new Promise((accept, reject) => {
 
             root.walkRules(rule => {
@@ -28,106 +39,60 @@ class PostcssPlugin {
                      */
                     if (declaration.prop === 'content' && declaration.value.startsWith('url')) {
 
-                        // parseDeclaration(declaration)
-
-                        const asset = declaration.value.match(/url\(["'](.*)["']\)/)[ 1 ]
+                        const [ match, asset ] = declaration.value.match(/url\(["'](.*)["']\)/)
+                        const { name } = path.parse(asset)
 
                         const beforeRule = postcss.rule({ selector: rule.selector + ':before' })
-                        const con = postcss.decl({ prop: 'content', value: '""' })
+                        const contentDeclaration = postcss.decl({ prop: 'content', value: "''" })
 
-                        root.append(beforeRule.append(con));
+                        root.append(beforeRule.append(contentDeclaration))
 
                         declaration.remove()
 
-                        list[ rule.selector ] = {
-                            name: path.parse(asset).name,
+                        this.cache.add({
                             asset: asset,
-                            declaration: con,
-                            content: ''
-                        }
+                            content: '',
+                            declaration: contentDeclaration,
+                            name: name,
+                            selector: rule.selector
+                        })
 
                     }
 
-                });
+                })
 
-            });
+            })
 
+            /**
+             * Generate Fonts
+             */
             webfontsGenerator({
-                files: Object.keys(list).map(key => path.resolve(loader.context, list[ key ].asset)),
+                files: this.cache.files,
                 writeFiles: false,
-                dest: path.join(__dirname, '../demo/distribution/font')
-            }, function (error, files) {
+                dest: __dirname
+            }, (error, files: { [key: string]: string | Buffer | Function, generateCss: () => string }) => {
 
-                const publicPath = '/'
-                const outputPath = options.outputDir
-                const outputedFiles = []
+                if (error) { return reject(error) }
 
-                const formats = {
-                    ttf: 'truetype',
-                    woff: 'woff',
-                    svg: 'svg',
-                    eot: 'embedded-opentype'
-                }
+                const { outputDir } = this.options
+                const emittedFiles = []
 
                 for (let type in files) {
 
                     if (typeof files[ type ] !== 'function') {
 
-                        let name = path.posix.join(outputPath, 'icon.' + type);
+                        const name = path.posix.join(outputDir, 'icon.' + type)
 
-                        loader.emitFile(name, files[ type ], null)
+                        this.loader.emitFile(name, files[ type ] as Buffer, null)
 
-                        outputedFiles.push({
-                            name: name,
-                            type: type,
-                            format: formats[ type ]
-                        })
+                        emittedFiles.push({ name, type, format: this.formats[ type ] })
 
                     }
 
                 }
 
-                const fontFace = postcss.rule({ selector: '@font-face' })
-
-                let inlineOutputFiles = outputedFiles.map(file => {
-                    if (file.type === 'eot') { file.name += '#iefix' }
-                    return `url('${publicPath + file.name}') format('${file.format}')`
-                }).join(',\n')
-
-                fontFace.append(postcss.decl(
-                    { prop: 'src', value: `url('${publicPath}${outputedFiles[ 0 ].name}')` }
-                ))
-
-                fontFace.append(postcss.decl({ prop: 'src', value: inlineOutputFiles }))
-                fontFace.append(postcss.decl({ prop: 'font-family', value: `'${options.familyName}'` }))
-                fontFace.append(postcss.decl({ prop: 'font-weight', value: "normal" }))
-                fontFace.append(postcss.decl({ prop: 'font-style', value: "normal" }))
-
-                const extension = postcss.rule({ selector: Object.keys(list).join(',') })
-                extension.append(postcss.decl({ prop: 'font-family', value: `'${options.familyName}'` }))
-                extension.append(postcss.decl({ prop: 'speak', value: "none" }))
-                extension.append(postcss.decl({ prop: 'font-style', value: "normal" }))
-                extension.append(postcss.decl({ prop: 'vertical-align', value: "middle" }))
-                extension.append(postcss.decl({ prop: 'font-weight', value: "normal" }))
-                extension.append(postcss.decl({ prop: 'font-variant', value: "normal" }))
-                extension.append(postcss.decl({ prop: 'text-transform', value: "none" }))
-                extension.append(postcss.decl({ prop: 'line-height', value: "1" }))
-                extension.append(postcss.decl({ prop: '-webkit-font-smoothing', value: "antialiased" }))
-                extension.append(postcss.decl({ prop: '-moz-osx-font-smoothing', value: "grayscale" }))
-
-                root.prepend(fontFace, extension)
-
-                // loader.emitFile('ico/**/moon.eot', files.woff2, null)
-
-                for (let property in list) {
-
-                    const unicode = files.generateCss().match(
-                        new RegExp(`${list[ property ].name}.*\n.*content:(.*);`)
-                    )[ 1 ]
-
-                    list[ property ].declaration.value = unicode.trim()
-
-                }
+                this.generateFontFaceDeclaration(emittedFiles)
+                this.injectFontIconCharCode(files.generateCss())
 
                 accept()
 
@@ -136,6 +101,58 @@ class PostcssPlugin {
         })
     }
 
-}
+    private injectFontIconCharCode(generatedCSS: string) {
+        this.cache.items.forEach(({ name, declaration }) => {
+            const unicode = generatedCSS.match(new RegExp(`${name}.*\n.*content:(.*)`))[ 1 ]
+            declaration.value = unicode.trim().replace(';', '')
+        })
+    }
 
-module.exports = (new PostcssPlugin()).run()
+    private generateInlinedUrls(files): string {
+
+        return files.map((file, index) => {
+
+            let url = path.posix.join(this.options.publicPath, file.name)
+
+            /**
+             * https://stackoverflow.com/questions/8050640/how-does-iefix-solve-web-fonts-loading-in-ie6-ie8
+             */
+            if (index === 0) { url += '?#iefix' }
+
+            return `url('${url}') format('${file.format}')`
+
+        }).join(',\n' + ' '.repeat(7)) // space + indentation
+    }
+
+    private generateFontFaceDeclaration(emittedFiles: { name: string, format: string, type: string }[]) {
+
+        const { publicPath, familyName, fallbackType } = this.options
+
+        const fontFace = postcss.rule({ selector: '@font-face' })
+        const fallbackFontUrl = path.posix.join(publicPath, emittedFiles.find(item => item.type === fallbackType).name)
+        const inlinedFontUrls = this.generateInlinedUrls(emittedFiles)
+
+        fontFace.append(postcss.decl({ prop: 'src', value: `url('${fallbackFontUrl}')` }))
+        fontFace.append(postcss.decl({ prop: 'src', value: inlinedFontUrls }))
+        fontFace.append(postcss.decl({ prop: 'font-family', value: `'${familyName}'` }))
+        fontFace.append(postcss.decl({ prop: 'font-weight', value: 'normal' }))
+        fontFace.append(postcss.decl({ prop: 'font-style', value: 'normal' }))
+
+        const extension = postcss.rule({ selector: this.cache.selectors.join(',') })
+
+        extension.append(postcss.decl({ prop: 'font-family', value: `'${familyName}'` }))
+        extension.append(postcss.decl({ prop: 'speak', value: 'none' }))
+        extension.append(postcss.decl({ prop: 'font-style', value: 'normal' }))
+        extension.append(postcss.decl({ prop: 'vertical-align', value: 'middle' }))
+        extension.append(postcss.decl({ prop: 'font-weight', value: 'normal' }))
+        extension.append(postcss.decl({ prop: 'font-variant', value: 'normal' }))
+        extension.append(postcss.decl({ prop: 'text-transform', value: 'none' }))
+        extension.append(postcss.decl({ prop: 'line-height', value: '1' }))
+        extension.append(postcss.decl({ prop: '-webkit-font-smoothing', value: 'antialiased' }))
+        extension.append(postcss.decl({ prop: '-moz-osx-font-smoothing', value: 'grayscale' }))
+
+        this.root.prepend(fontFace, extension)
+
+    }
+
+}

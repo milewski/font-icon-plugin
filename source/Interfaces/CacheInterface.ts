@@ -1,3 +1,5 @@
+import { Declaration } from "postcss";
+
 export type Result = {
     html: string[]
     images: string[]
@@ -5,8 +7,9 @@ export type Result = {
 }
 
 export interface CacheInterface {
-    hash: string
-    optionHash: string
-    version: number
-    result: { html: string[] }
+    name: string
+    asset: string
+    declaration: Declaration
+    content: string
+    selector: string
 }

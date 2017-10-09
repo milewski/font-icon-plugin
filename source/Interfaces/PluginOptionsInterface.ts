@@ -29,6 +29,8 @@ export type Platforms = {
 export type Manifest = boolean | string | Partial<Platforms>
 
 export interface PluginOptionsInterface {
+
+
     source: string
     path?: string
     export?: string | boolean
