@@ -1,5 +1,7 @@
+import * as webpack from 'webpack'
 import { Compiler } from './Interfaces/Compiler'
 import { PostcssPlugin } from './postcss-plugin'
+import LoaderContext = webpack.loader.LoaderContext
 
 export const PLUGIN_NAME = 'icon-font-webpack'
 
@@ -18,7 +20,7 @@ export class FontIconPlugin {
                     /**
                      * Apply PostcssPlugin to every loader that includes the postcss-loader
                      */
-                    if (entry.loader.match(/postcss-loader/) && this.containPlugins(entry)) {
+                    if (entry.loader.match(/postcss-loader/) && this.containPlugins(entry, loaderContext)) {
                         entry.options.plugins.push(new PostcssPlugin({ context, ...this.options }, loaderContext).initialize())
                     }
 
@@ -30,8 +32,11 @@ export class FontIconPlugin {
 
     }
 
-    private containPlugins(entry: { options: { plugins: any[] } }): boolean {
+    private containPlugins(entry: { options: { plugins: any[] } }, loader: LoaderContext): boolean {
 
+        /**
+         * If for some reason it happens to be a string, ignore it
+         */
         if (typeof entry.options === 'string') {
             return false
         }
@@ -40,11 +45,15 @@ export class FontIconPlugin {
             entry.options = { plugins: [] }
         }
 
-        if (entry.options.plugins) {
+        if (Array.isArray(entry.options.plugins)) {
             return !entry.options.plugins.some(plugin => plugin.postcssPlugin === PLUGIN_NAME)
         }
 
-        entry.options.plugins = []
+        if (typeof entry.options.plugins === 'function') {
+            entry.options.plugins = [ ...entry.options.plugins(loader) ]
+        } else {
+            entry.options.plugins = []
+        }
 
         return true
 

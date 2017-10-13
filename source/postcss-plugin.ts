@@ -28,7 +28,7 @@ export class PostcssPlugin {
 
     process(root: Root): Promise<void> {
 
-        return new Promise((accept, reject) => {
+        return new Promise<Cache>(accept => {
 
             root.walkRules(rule => {
 
@@ -63,11 +63,18 @@ export class PostcssPlugin {
 
             })
 
-            /**
-             * Generate Fonts
-             */
+            accept(this.cache)
+
+        }).then(cache => cache.isEmpty() ? null : this.generateWebFonts(cache.files))
+
+    }
+
+    private generateWebFonts(files: string[]): Promise<void> {
+
+        return new Promise((accept, reject) => {
+
             webfontsGenerator({
-                files: this.cache.files,
+                files: files,
                 writeFiles: false,
                 dest: __dirname
             }, (error, files: { [key: string]: string | Buffer | Function, generateCss: () => string }) => {

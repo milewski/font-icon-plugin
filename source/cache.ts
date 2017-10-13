@@ -21,4 +21,8 @@ export class Cache {
         this.items.push(item)
     }
 
+    public isEmpty(): boolean {
+        return this.items.length === 0
+    }
+
 }

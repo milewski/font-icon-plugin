@@ -1,6 +1,6 @@
 {
     "name": "icon-font-plugin",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "description": "Let webpack generare fonticons",
     "main": "source/plugin.js",
     "files": [
@@ -9,7 +9,7 @@
     "scripts": {
         "try:node": "node --inspect-brk ./node_modules/webpack/bin/webpack.js --config demo/webpack.config.js --display none",
         "try": "webpack --config demo/webpack.config.js --display none",
-        "prepublish": "npm run test"
+        "prepublish": "tsc"
     },
     "repository": {
         "type": "git",
@@ -29,7 +29,11 @@
     },
     "homepage": "https://github.com/milewski/icon-font-plugin",
     "devDependencies": {
+        "@types/loader-utils": "^1.1.0",
+        "@types/mocha": "^2.2.43",
+        "@types/node": "^8.0.34",
         "@types/webpack": "^3.0.13",
+        "@types/webpack-env": "^1.13.1",
         "clean-webpack-plugin": "^0.1.17",
         "css-loader": "^0.28.7",
         "extract-text-webpack-plugin": "^3.0.1",
