@@ -1,10 +1,10 @@
+import * as path from 'path'
 import * as postcss from 'postcss'
 import { Root } from 'postcss'
 import * as webfontsGenerator from 'webfonts-generator'
-import * as path from 'path'
 import { loader } from 'webpack'
 import { Cache } from './cache'
-import { PLUGIN_NAME } from './plugin';
+import { PLUGIN_NAME } from './plugin'
 
 export class PostcssPlugin {
 
@@ -43,7 +43,7 @@ export class PostcssPlugin {
                         const { name } = path.parse(asset)
 
                         const beforeRule = postcss.rule({ selector: rule.selector + ':before' })
-                        const contentDeclaration = postcss.decl({ prop: 'content', value: "''" })
+                        const contentDeclaration = postcss.decl({ prop: 'content', value: '\'\'' })
 
                         root.append(beforeRule.append(contentDeclaration))
 
@@ -109,10 +109,16 @@ export class PostcssPlugin {
     }
 
     private injectFontIconCharCode(generatedCSS: string) {
+
         this.cache.items.forEach(({ name, declaration }) => {
-            const unicode = generatedCSS.match(new RegExp(`${name}.*\n.*content:(.*)`))[ 1 ]
-            declaration.value = unicode.trim().replace(';', '')
+
+            const unicode = generatedCSS.match(new RegExp(`${name}.*\n.*content:(.*)`))
+
+            if (unicode && unicode[ 1 ])
+                declaration.value = unicode[ 1 ].trim().replace(';', '')
+
         })
+
     }
 
     private generateInlinedUrls(files): string {

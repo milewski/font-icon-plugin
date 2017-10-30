@@ -1,5 +1,5 @@
-import { CacheInterface } from "./Interfaces/CacheInterface";
-import * as path from "path";
+import * as path from 'path'
+import { CacheInterface } from './Interfaces/CacheInterface'
 
 export class Cache {
 

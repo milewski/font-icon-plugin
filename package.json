@@ -1,6 +1,6 @@
 {
     "name": "icon-font-plugin",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "description": "Let webpack generare fonticons",
     "main": "source/plugin.js",
     "files": [
@@ -30,24 +30,24 @@
     "homepage": "https://github.com/milewski/icon-font-plugin",
     "devDependencies": {
         "@types/loader-utils": "^1.1.0",
-        "@types/mocha": "^2.2.43",
-        "@types/node": "^8.0.34",
-        "@types/webpack": "^3.0.13",
-        "@types/webpack-env": "^1.13.1",
+        "@types/mocha": "^2.2.44",
+        "@types/node": "^8.0.47",
+        "@types/webpack": "^3.0.14",
+        "@types/webpack-env": "^1.13.2",
         "clean-webpack-plugin": "^0.1.17",
         "css-loader": "^0.28.7",
-        "extract-text-webpack-plugin": "^3.0.1",
+        "extract-text-webpack-plugin": "^3.0.2",
         "file-loader": "^0.11.2",
         "node-sass": "^4.5.3",
-        "resolve-url-loader": "^2.1.0",
+        "resolve-url-loader": "^2.2.0",
         "sass-loader": "^6.0.6",
         "style-loader": "^0.18.2",
         "typescript": "^2.5.3",
-        "webpack": "^3.6.0"
+        "webpack": "^3.7.1"
     },
     "dependencies": {
         "postcss": "^6.0.13",
-        "postcss-loader": "^2.0.6",
+        "postcss-loader": "^2.0.8",
         "webfonts-generator": "^0.4.0"
     }
 }
