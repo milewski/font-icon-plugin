@@ -50,7 +50,7 @@ export class PostcssPlugin {
                         declaration.remove()
 
                         this.cache.add({
-                            asset: asset,
+                            asset: asset.replace(/^\.\//, '../'),
                             content: '',
                             declaration: contentDeclaration,
                             name: name,
