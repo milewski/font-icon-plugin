@@ -1,4 +1,4 @@
-import { Declaration } from "postcss";
+import { Declaration } from 'postcss'
 
 export type Result = {
     html: string[]
@@ -12,4 +12,5 @@ export interface CacheInterface {
     declaration: Declaration
     content: string
     selector: string
+    context: string
 }

@@ -13,7 +13,7 @@ export class FontIconPlugin {
 
         compiler.plugin('compilation', compilation => {
 
-            compilation.plugin('normal-module-loader', (loaderContext, { context, loaders }) => {
+            compilation.plugin('normal-module-loader', (loaderContext, { loaders }) => {
 
                 loaders.forEach(entry => {
 
@@ -21,7 +21,7 @@ export class FontIconPlugin {
                      * Apply PostcssPlugin to every loader that includes the postcss-loader
                      */
                     if (entry.loader.match(/postcss-loader/) && this.containPlugins(entry, loaderContext)) {
-                        entry.options.plugins.push(new PostcssPlugin({ context, ...this.options }, loaderContext).initialize())
+                        entry.options.plugins.push(new PostcssPlugin({ ...this.options }, loaderContext).initialize())
                     }
 
                 })

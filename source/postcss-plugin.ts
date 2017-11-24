@@ -1,6 +1,6 @@
 import * as path from 'path'
 import * as postcss from 'postcss'
-import { Root } from 'postcss'
+import { Result, Root } from 'postcss'
 import * as webfontsGenerator from 'webfonts-generator'
 import { loader } from 'webpack'
 import { Cache } from './cache'
@@ -19,14 +19,16 @@ export class PostcssPlugin {
         eot: 'embedded-opentype'
     }
 
-    public initialize = postcss.plugin(PLUGIN_NAME, () => root => this.process(this.root = root))
+    public initialize = postcss.plugin(PLUGIN_NAME, () => (root, result) => {
+        return this.process(this.root = root, result)
+    })
 
     constructor(options: any, private loader: loader.LoaderContext) {
         this.options = { ...this.options, ...options }
-        this.cache = new Cache(this.options.context)
+        this.cache = new Cache()
     }
 
-    process(root: Root): Promise<void> {
+    process(root: Root, result: Result): Promise<void> {
 
         return new Promise<Cache>(accept => {
 
@@ -50,7 +52,8 @@ export class PostcssPlugin {
                         declaration.remove()
 
                         this.cache.add({
-                            asset: asset.replace(/^\.\//, '../'),
+                            context: path.parse(result.opts.from).dir,
+                            asset: asset,
                             content: '',
                             declaration: contentDeclaration,
                             name: name,
