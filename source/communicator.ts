@@ -1,19 +1,46 @@
 import * as path from 'path'
 import * as postcss from 'postcss'
-import { Root } from 'postcss'
+import { Plugin, Root } from 'postcss'
 import * as webfontsGenerator from 'webfonts-generator'
-import { loader } from 'webpack'
 import { Cache } from './cache'
+import { Counter } from './counter'
+import { CacheInterface } from './Interfaces/CacheInterface'
+import { PLUGIN_NAME } from './plugin'
 
 export class Communicator {
 
     public root: Root
     public cache = new Cache()
     public queue: number = 0
-    private loader: loader.LoaderContext
-    private chain: Promise<void>[] = []
+    public assets: { name: string, content: any }[] = []
+    public resolver: () => void
+    public compilation: Promise<void> = new Promise(resolve => { this.resolver = resolve })
+
+    // public compilation = { assets: {} }
+
+    private loader = {
+        emitError(error: Error) {
+            throw error
+        },
+        emitFile: (name: string, file: Buffer, sourceMap?) => {
+
+            this.assets.push({
+                name: name,
+                content: {
+                    source: function () { return file },
+                    size: function () { return file.length }
+                }
+            })
+
+        }
+    }
+    // private chain: Promise<void>[] = []
     private resolutions: Promise<void>
     private generated = false
+    private counter: Counter = new Counter()
+    public running: boolean = false
+    private generationHasStarted: boolean = false
+    private resolvers: (() => void)[] = []
 
     private formats = {
         ttf: 'truetype',
@@ -24,7 +51,6 @@ export class Communicator {
     }
 
     constructor(private options) {
-
     }
 
     public setRoot(root: Root, filename: string) {
@@ -32,45 +58,123 @@ export class Communicator {
             this.root = root
     }
 
-    public setLoader(loader: loader.LoaderContext) {
-        this.loader = loader
-    }
 
-    public intercept(promise: Promise<any>): Promise<void> {
-        return new Promise(resolve => { this.chain.push(promise.then(resolve)) }).then(() => this.resolveChain())
-    }
+    // public intercept(promise: Promise<any>): Promise<void> {
+    //     return new Promise(resolve => { this.chain.push(promise.then(resolve)) }).then(() => this.resolveChain())
+    // }
 
-    private resolveChain(): Promise<void> {
-        return this.resolutions ? this.resolutions : this.resolutions = Promise.all(this.chain).then(() => {
-            return this.generateFonts()
+    // private resolveChain(): Promise<void> {
+    //     return this.resolutions ? this.resolutions : this.resolutions = Promise.all(this.chain).then(() => {
+    //         return this.generateFonts()
+    //     })
+    // }
+
+    public generateFonts(): Plugin<Promise<void>> {
+
+        let resolver: () => void
+
+        const promise = new Promise(resolve => resolver = resolve)
+        let mainFileRoot
+
+        return postcss.plugin(PLUGIN_NAME + '-generator', () => (root, result) => {
+
+            this.generationHasStarted = true
+
+            const context = result.opts.from
+
+            if (this.counter.hasDeclarationForFile(context)) {
+                this.cache.add(root, context, ...this.process(root))
+            }
+
+            if (path.parse(result.opts.from).name === this.options.globalFilename) {
+                mainFileRoot = root
+            }
+
+            if (this.counter.isLast()) {
+
+                if (!mainFileRoot) {
+                    return this.loader.emitError(new Error(this.options.globalFilename + ' did not match match any file'))
+                }
+
+                return this.generateWebFonts(mainFileRoot, this.cache.files).then(resolver).catch(error => {
+                    console.log(error)
+                })
+
+            }
+
+            return promise.catch(e => console.log(e))
+
         })
-    }
-
-    public generateFonts(): Promise<void> {
-
-        // if (this.root) {
-
-        if (this.generated === false) {
-            this.generated = true
-            return this.generateWebFonts(this.cache.files)
-        } else {
-            return Promise.resolve()
-        }
-
-        // }
-
-        /**
-         * Retry until it's good
-         */
-        // return new Promise(resolve => {
-        //     setTimeout(() => {
-        //         this.generateFonts().then(resolve)
-        //     })
-        // })
 
     }
 
-    private generateWebFonts(files: string[]): Promise<void> {
+
+    private process(root: Root): CacheInterface[] {
+
+        const interfaces = []
+
+        root.walkRules(rule => {
+
+            rule.walkDecls(declaration => {
+
+                /**
+                 * Detect the use of content: url('../my/asset.svg')
+                 */
+                if (declaration.prop === 'content' && declaration.value.startsWith('url')) {
+
+                    const [ match, asset ] = declaration.value.match(/url\(["'](.*)["']\)/)
+                    const { name } = path.parse(asset)
+
+                    const beforeRule = postcss.rule({ selector: rule.selector + ':before' })
+                    const contentDeclaration = postcss.decl({ prop: 'content', value: '\'\'' })
+
+                    root.append(beforeRule.append(contentDeclaration))
+
+                    declaration.remove()
+
+                    interfaces.push({
+                        asset,
+                        name,
+                        content: '',
+                        declaration: contentDeclaration,
+                        selector: rule.selector
+                    })
+
+                }
+
+            })
+
+        })
+
+        return interfaces
+
+    }
+
+    // public generateFonts(): Promise<void> {
+    //
+    //     // if (this.root) {
+    //
+    //     // if (this.generated === false) {
+    //     //     this.generated = true
+    //     //     return this.generateWebFonts(this.cache.files)
+    //     // } else {
+    //     //     return Promise.resolve()
+    //     // }
+    //
+    //     // }
+    //
+    //     /**
+    //      * Retry until it's good
+    //      */
+    //     // return new Promise(resolve => {
+    //     //     setTimeout(() => {
+    //     //         this.generateFonts().then(resolve)
+    //     //     })
+    //     // })
+    //
+    // }
+
+    private generateWebFonts(root: Root, files: string[]): Promise<{ name: string, content: string }[]> {
 
         return new Promise((accept, reject) => {
 
@@ -99,7 +203,7 @@ export class Communicator {
 
                 }
 
-                this.generateFontFaceDeclaration(emittedFiles)
+                this.generateFontFaceDeclaration(root, emittedFiles)
                 this.injectFontIconCharCode(files.generateCss())
 
                 accept()
@@ -122,7 +226,7 @@ export class Communicator {
 
     }
 
-    private generateFontFaceDeclaration(emittedFiles: { name: string, format: string, type: string }[]) {
+    private generateFontFaceDeclaration(root: Root, emittedFiles: { name: string, format: string, type: string }[]) {
 
         const { publicPath, familyName, fallbackType } = this.options
 
@@ -149,7 +253,7 @@ export class Communicator {
         extension.append(postcss.decl({ prop: '-webkit-font-smoothing', value: 'antialiased' }))
         extension.append(postcss.decl({ prop: '-moz-osx-font-smoothing', value: 'grayscale' }))
 
-        this.root.prepend(fontFace, extension)
+        root.prepend(fontFace, extension)
 
     }
 
@@ -167,6 +271,36 @@ export class Communicator {
             return `url('${url}') format('${file.format}')`
 
         }).join(',\n' + ' '.repeat(7)) // space + indentation
+    }
+
+    public gatherStatistics(): Plugin<void> {
+
+        return postcss.plugin(PLUGIN_NAME + '-collector', () => (root, result) => {
+
+            root.walkRules(rule => {
+
+                rule.walkDecls(declaration => {
+
+                    /**
+                     * Detect the use of content: url('../my/asset.svg')
+                     */
+                    if (declaration.prop === 'content' && declaration.value.startsWith('url')) {
+                        console.log(result.opts.from)
+                        this.counter.add(result.opts.from, declaration)
+                    }
+
+                })
+
+            })
+
+            if (this.generationHasStarted) {
+                this.loader.emitError(new Error('Generation cant start before gathering'))
+            }
+
+            return new Promise(resolve => setTimeout(() => { resolve() }))
+
+        })
+
     }
 
 }

@@ -12,5 +12,4 @@ export interface CacheInterface {
     declaration: Declaration
     content: string
     selector: string
-    context: string
 }
